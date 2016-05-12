@@ -41,6 +41,16 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
         list.setAdapter(this.mInnerAdapter = new InnerAdapter(this, new ArrayList<KeyValueEntity>()));
         list.setEmptyView(findViewById(android.R.id.empty));
         list.setOnItemClickListener(this);
+
+        findViewById(android.R.id.button1).setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+                MainActivity.this.mMainPreferences.edit().putInt("SelectedLocationIndex", -1).commit();
+                MainActivity.this.mSelectedIndexTextView.setText("Count:" + MainActivity.this.mMainPreferences.getInt("count", 0) + " Selected Location Index:" + -1);
+            }
+        });
     }
 
     @Override
