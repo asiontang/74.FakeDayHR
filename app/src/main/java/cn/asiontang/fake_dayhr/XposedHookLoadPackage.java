@@ -54,7 +54,8 @@ public class XposedHookLoadPackage implements IXposedHookLoadPackage
         }
         catch (final Exception e)
         {
-            LogHelper.log(e.getCause() == null ? e : e.getCause());
+            LogHelper.log("handleLoadPackage Exception:");
+            LogHelper.log(e);
         }
     }
 
@@ -71,8 +72,8 @@ public class XposedHookLoadPackage implements IXposedHookLoadPackage
         LogHelper.log(XposedHookLoadPackage.class.getPackage().getName() + " Hooking:\n        " + loadPackageParam.packageName);
 
         //为了获取 Context ，以便调用ContentProvider
-        XC_MethodHook_onCreate x = new XC_MethodHook_onCreate(loadPackageParam);
-        XC_MethodHook.Unhook hookMethod = XposedHelpers.findAndHookMethod("android.app.Application", loadPackageParam.classLoader, "onCreate", x);
+        final XC_MethodHook_onCreate x = new XC_MethodHook_onCreate(loadPackageParam);
+        final XC_MethodHook.Unhook hookMethod = XposedHelpers.findAndHookMethod("android.app.Application", loadPackageParam.classLoader, "onCreate", x);
         x.setUnHook(hookMethod);
     }
 }
