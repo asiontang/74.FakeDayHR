@@ -4,6 +4,8 @@ import android.content.Context;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 import dalvik.system.PathClassLoader;
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -14,11 +16,11 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class XposedHookLoadPackage implements IXposedHookLoadPackage
 {
+    private static List<String> mHookPackageNameList;
+
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam loadPackageParam) throws Throwable
     {
-        if (!"com.amap.location.demo".equals(loadPackageParam.packageName))
-            return;
         try
         {
             //在发布时，直接调用即可。
@@ -58,8 +60,17 @@ public class XposedHookLoadPackage implements IXposedHookLoadPackage
         }
     }
 
+
     public void handleLoadPackage4release(final XC_LoadPackage.LoadPackageParam loadPackageParam)
     {
+        if (mHookPackageNameList == null)
+            mHookPackageNameList = Arrays.asList(""//
+                    , "com.amap.location.demo"//
+                    , "com.dayhr"//
+            );
+        if (mHookPackageNameList.indexOf(loadPackageParam.packageName) == -1)
+            return;
+
         final XSharedPreferencesEx packagePreferences = new XSharedPreferencesEx();
 
         final XSharedPreferencesEx mPreferences = new XSharedPreferencesEx();
