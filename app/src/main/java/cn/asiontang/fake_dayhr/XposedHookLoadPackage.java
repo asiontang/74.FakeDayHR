@@ -70,6 +70,7 @@ public class XposedHookLoadPackage implements IXposedHookLoadPackage
             );
         if (mHookPackageNameList.indexOf(loadPackageParam.packageName) == -1)
             return;
+        XposedBridge.log(XposedHookLoadPackage.class.getPackage().getName() + " Hooked:\n        " + loadPackageParam.packageName);
 
         final XSharedPreferencesEx packagePreferences = new XSharedPreferencesEx();
 
