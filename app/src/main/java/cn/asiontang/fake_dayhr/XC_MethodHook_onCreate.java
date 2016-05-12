@@ -149,7 +149,7 @@ class XC_MethodHook_onCreate extends XC_MethodHook
         findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getAccuracy");
         findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getSpeed");
         findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getBearing");
-        findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getProvider");
+        findAndHookMethod("android.location.Location", this.mClassLoader, stringX, "getProvider");
 
         //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, doubleX, "getLatitude");//dayHr Diff
         //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, doubleX, "getLongitude");//dayHr Diff
