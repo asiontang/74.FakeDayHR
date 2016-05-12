@@ -67,7 +67,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
                     public void onClick(final DialogInterface dialog, final int which)
                     {
                         MainActivity.this.mMainPreferences.edit().putInt("SelectedLocationIndex", item.Key).commit();
-                        MainActivity.this.mSelectedIndexTextView.setText("Selected Location Index:" + MainActivity.this.mMainPreferences.getInt("SelectedLocationIndex", -1));
+                        MainActivity.this.mSelectedIndexTextView.setText("Count:" + MainActivity.this.mMainPreferences.getInt("count", 0) + " Selected Location Index:" + item.Key);
                     }
                 })
                 .show();
