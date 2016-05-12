@@ -24,37 +24,69 @@ class XC_MethodHook_onCreate extends XC_MethodHook
     protected void beforeHookedMethod(final MethodHookParam param) throws Throwable
     {
         //执行一次Hook操作即可。
-        //this.mUnHookMethod.unhook();
+        this.mUnHookMethod.unhook();
 
         this.mContext = (Context) param.thisObject;
         this.mClassLoader = this.mContext.getClassLoader();
 
-        LogHelper.log(" mContext:" + this.mContext.getClass().getName());
         try
         {
-            XposedHelpers.findClass("com.amap.api.location.AMapLocation", this.mClassLoader);
+            final Class<?> aClass = XposedHelpers.findClass("com.amap.api.location.AMapLocation", this.mClassLoader);
+            //for (final Method method : aClass.getMethods())
+            //{
+            //    LogHelper.log(method);
+            //}
+
+            LogHelper.log(this.mContext.getClass().getName() + ": found " + aClass.getName());
         }
-        catch (final Exception e)
+        catch (final XposedHelpers.ClassNotFoundError e)
         {
-            LogHelper.log(this.mContext.getClass().getName() + " Error Context And ClassLoader Skip Hook.");
+            LogHelper.log(this.mContext.getClass().getName() + ": Error Context And ClassLoader Skip Hook.");
             return;
         }
 
         //APK被加固后，启动时，加载的仅仅是加固框架代码，之后框架代码onCreate执行完毕后，真正的程序代码才开始执行。
         try
         {
-            LogHelper.log(this.mContext.getClass().getName() + " Hook Start.");
+            LogHelper.log(this.mContext.getClass().getName() + ": Hook Start.");
 
             startHook();
 
-            LogHelper.log(this.mContext.getClass().getName() + " Hook End");
+            LogHelper.log(this.mContext.getClass().getName() + ": Hook End");
         }
         catch (final Exception e)
         {
-            LogHelper.log(this.mContext.getClass().getName() + " Hook Exception:");
+            LogHelper.log(this.mContext.getClass().getName() + ": Hook Exception:");
+            LogHelper.log(e);
+        }
+        catch (final Error e)
+        {
+            LogHelper.log(this.mContext.getClass().getName() + ": Hook Error:");
             LogHelper.log(e);
         }
         super.beforeHookedMethod(param);
+    }
+
+    private void findAndHookMethod(final String className, final ClassLoader classLoader, final XC_MethodHook parameterTypesAndCallback, final String methodName)
+    {
+        try
+        {
+            XposedHelpers.findAndHookMethod(className, classLoader, methodName, parameterTypesAndCallback);
+        }
+        catch (final Exception e)
+        {
+            LogHelper.log(this.mContext.getClass().getName() + ": findAndHookMethod Exception:");
+            LogHelper.log(e);
+        }
+        catch (final NoSuchMethodError e)
+        {
+            LogHelper.log(this.mContext.getClass().getName() + ": findAndHookMethod NoSuchMethodError:" + e.getMessage());
+        }
+        catch (final Error e)
+        {
+            LogHelper.log(this.mContext.getClass().getName() + ": findAndHookMethod Error:");
+            LogHelper.log(e);
+        }
     }
 
     public void setUnHook(final Unhook unhook)
@@ -92,41 +124,59 @@ class XC_MethodHook_onCreate extends XC_MethodHook
             this.mPreferences.init(this.mContext, "" + selectedLocationIndex);
             this.mPreferences.edit().putBoolean("ReadOnly", true).commit();
         }
-
         final XC_MethodHook_string stringX = new XC_MethodHook_string(this.mPreferences);
         final XC_MethodHook_double doubleX = new XC_MethodHook_double(this.mPreferences);
         final XC_MethodHook_float floatX = new XC_MethodHook_float(this.mPreferences);
         final XC_MethodHook_int intX = new XC_MethodHook_int(this.mPreferences);
         final XC_MethodHook_bool boolX = new XC_MethodHook_bool(this.mPreferences);
 
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "isOffset", boolX);
+        /**
+         public double android.location.Location.getLatitude()
+         public double android.location.Location.getLongitude()
+         public double android.location.Location.getAltitude()
 
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getLatitude", doubleX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getLongitude", doubleX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getAltitude", doubleX);
+         public float android.location.Location.getAccuracy()
+         public float android.location.Location.getBearing()
+         public float android.location.Location.getSpeed()
 
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getAccuracy", floatX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getSpeed", floatX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getBearing", floatX);
+         public long android.location.Location.getTime()
+         public java.lang.String android.location.Location.getProvider()
+         */
 
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getLocationType", intX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getErrorCode", intX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getSatellites", intX);
+        findAndHookMethod("android.location.Location", this.mClassLoader, doubleX, "getLatitude");
+        findAndHookMethod("android.location.Location", this.mClassLoader, doubleX, "getLongitude");
+        findAndHookMethod("android.location.Location", this.mClassLoader, doubleX, "getAltitude");
+        findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getAccuracy");
+        findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getSpeed");
+        findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getBearing");
+        findAndHookMethod("android.location.Location", this.mClassLoader, floatX, "getProvider");
 
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getLocationDetail", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getErrorInfo", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getCountry", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getRoad", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getAddress", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getProvince", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getCity", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getDistrict", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getCityCode", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getAdCode", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getPoiName", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getStreet", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getStreetNum", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getAoiName", stringX);
-        XposedHelpers.findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, "getProvider", stringX);
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, doubleX, "getLatitude");//dayHr Diff
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, doubleX, "getLongitude");//dayHr Diff
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, doubleX, "getAltitude");//dayHr Diff
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, floatX, "getAccuracy");//dayHr Diff
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, floatX, "getSpeed");//dayHr Diff
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, floatX, "getBearing");//dayHr Diff
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getProvider");//dayHr Diff
+
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, boolX, "isOffset");//dayHr No
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, intX, "getLocationType");//dayHr No
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, intX, "getErrorCode");//dayHr No
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, intX, "getSatellites");//dayHr No
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getLocationDetail");//dayHr No
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getStreetNum");//dayHr No
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getAoiName");//dayHr No
+        //        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getErrorInfo");//dayHr No
+
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getCountry");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getRoad");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getAddress");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getProvince");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getCity");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getDistrict");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getCityCode");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getAdCode");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getPoiName");
+        findAndHookMethod("com.amap.api.location.AMapLocation", this.mClassLoader, stringX, "getStreet");
     }
 }
