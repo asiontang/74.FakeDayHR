@@ -76,15 +76,22 @@ public class XposedHookLoadPackage implements IXposedHookLoadPackage
 
                 //当选择的 位置 索引为空时，程序进入“坐标收集模式”，会将定位到的位置记录在案，方便用户确定下次模拟哪个位置。
                 final int selectedLocationIndex = packagePreferences.getInt("SelectedLocationIndex", -1);
-
-                //将采集到的 位置 索引 自动递增。
                 if (selectedLocationIndex == -1)
                 {
-                    final int newCount = packagePreferences.getInt("count", 0) + 1;
-                    packagePreferences.edit().putInt("count", newCount).commit();
+                    final int nowCount = packagePreferences.getInt("count", 1);
 
-                    //记录递增的Count，总共记录的位置数量
-                    mPreferences.init(context, "" + newCount);
+                    //先判断原来的记录是否有效，无效的话，则覆盖掉。
+                    mPreferences.init(context, "" + nowCount);
+                    if (mPreferences.getString("getLatitude", null) != null && mPreferences.getString("getLongitude", null) != null)
+                    {
+                        //将采集到的 位置 索引 自动递增。
+                        final int newCount = nowCount + 1;
+                        packagePreferences.edit().putInt("count", newCount).commit();
+
+                        //记录递增的Count，总共记录的位置数量
+                        mPreferences.init(context, "" + newCount);
+                        mPreferences.reset();
+                    }
                     mPreferences.edit().putBoolean("ReadOnly", false).commit();
                 }
                 else

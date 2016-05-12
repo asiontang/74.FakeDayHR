@@ -145,6 +145,13 @@ public class XSharedPreferencesEx
             this.mInnerEditor.init(context, fileName);
     }
 
+    public void reset()
+    {
+        if (this.mMap != null && this.mMap.size() != 0)
+            this.mMap.clear();
+        this.mMap = null;
+    }
+
     public static class InnerEditor implements SharedPreferences.Editor
     {
         private Object mValue;
