@@ -35,7 +35,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
         this.mMainPreferences.init(this, SharedPreferencesProvider.SHARED_PREFERENCES_FILE_NAME_MAIN);
 
         this.mSelectedIndexTextView = (TextView) findViewById(android.R.id.primary);
-        this.mSelectedIndexTextView.setText("Selected Location Index:" + this.mMainPreferences.getInt("SelectedLocationIndex", -1));
+        this.mSelectedIndexTextView.setText("Count:" + this.mMainPreferences.getInt("count", 0) + " Selected Location Index:" + this.mMainPreferences.getInt("SelectedLocationIndex", -1));
 
         final ListView list = (ListView) findViewById(android.R.id.list);
         list.setAdapter(this.mInnerAdapter = new InnerAdapter(this, new ArrayList<KeyValueEntity>()));

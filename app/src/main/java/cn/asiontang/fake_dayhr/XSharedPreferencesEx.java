@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.net.Uri;
 import android.util.Log;
 
@@ -25,11 +26,40 @@ public class XSharedPreferencesEx
     {
     }
 
+    private static Uri getUri(final String fileName)
+    {
+        return Uri.parse("content://cn.asiontang.SharedPreferencesProvider//" + fileName);
+    }
+
+    /**
+     * 听过发送Service请求来达到设置 SharedPreferences 的键值对的作用。
+     *
+     * @param fileName SharedPreferences 文件名
+     * @param key      需要保存到 SharedPreferences 的 键
+     * @param value    需要保存到 SharedPreferences 的 值（已经序列为String）
+     */
+    private static void setKeyValue(final Context context, final String fileName, final String key, final Object value, final Class type)
+    {
+        if (context == null)
+        {
+            XposedBridge.log("setKeyValue context == null:\n    " + key + "\n        " + value);
+            return;
+        }
+        final ContentValues values = new ContentValues();
+        values.put(SharedPreferencesProvider.EXTRA_KEY_STR_KEYNAME, key);
+        values.put(SharedPreferencesProvider.EXTRA_KEY_STR_VALUE, String.valueOf(value));
+        final ContentResolver contentResolver = context.getContentResolver();
+        final Uri result = contentResolver.insert(getUri(fileName), values);
+        if (result == null)
+            XposedBridge.log("setKeyValue result == null:\n    " + key + "\n        " + value);
+    }
+
     public InnerEditor edit()
     {
         if (this.mInnerEditor != null)
             return this.mInnerEditor;
-        return this.mInnerEditor = new InnerEditor(this.mContext);
+
+        return this.mInnerEditor = new InnerEditor(this.mContext, this.mFileName);
     }
 
     public boolean getBoolean(final String key, final boolean defValue)
@@ -66,8 +96,6 @@ public class XSharedPreferencesEx
 
     public String getString(final String key, final String defValue)
     {
-        Log.e("-------------Start", key + " | " + defValue);
-
         //调用时，耗时大约3秒左右，所有不能频繁调用 query
         if (this.mMap == null)
         {
@@ -78,6 +106,8 @@ public class XSharedPreferencesEx
                 query = this.mContext.getContentResolver().query(getUri(this.mFileName), null, key, null, null);
                 if (query == null)
                     return defValue;
+
+                query = ((CursorWrapper) query).getWrappedCursor();
 
                 if (!query.moveToNext())
                     return defValue;
@@ -101,59 +131,32 @@ public class XSharedPreferencesEx
                     query.close();
             }
         }
-        Log.e("-------------End", key + " | " + defValue);
         if (!this.mMap.containsKey(key))
             return defValue;
         return this.mMap.get(key);
-    }
-
-    private Uri getUri(final String fileName)
-    {
-        return Uri.parse("content://cn.asiontang.SharedPreferencesProvider//" + fileName);
     }
 
     public void init(final Context context, final String fileName)
     {
         this.mFileName = fileName;
         this.mContext = context;
+
         if (this.mInnerEditor != null)
-            this.mInnerEditor.setContext(context);
+            this.mInnerEditor.init(context, fileName);
     }
 
-    /**
-     * 听过发送Service请求来达到设置 SharedPreferences 的键值对的作用。
-     *
-     * @param fileName SharedPreferences 文件名
-     * @param key      需要保存到 SharedPreferences 的 键
-     * @param value    需要保存到 SharedPreferences 的 值（已经序列为String）
-     */
-    private void setKeyValue(final Context context, final String fileName, final String key, final Object value, final Class type)
+    public static class InnerEditor implements SharedPreferences.Editor
     {
-        if (context == null)
-        {
-            XposedBridge.log("setKeyValue context == null:\n    " + key + "\n        " + value);
-            XposedBridge.log(this.toString());
-            return;
-        }
-        final ContentValues values = new ContentValues();
-        values.put(SharedPreferencesProvider.EXTRA_KEY_STR_KEYNAME, key);
-        values.put(SharedPreferencesProvider.EXTRA_KEY_STR_VALUE, String.valueOf(value));
-        final ContentResolver contentResolver = context.getContentResolver();
-        final Uri result = contentResolver.insert(getUri(fileName), values);
-        if (result == null)
-            XposedBridge.log("setKeyValue result == null:\n    " + key + "\n        " + value);
-    }
-
-    class InnerEditor implements SharedPreferences.Editor
-    {
-        public Object mValue;
-        public String mKey;
-        public Class mType;
+        private Object mValue;
+        private String mKey;
+        private Class mType;
         private Context mContext;
+        private String mFileName;
 
-        public InnerEditor(final Context context)
+        public InnerEditor(final Context context, final String fileName)
         {
             this.mContext = context;
+            this.mFileName = fileName;
         }
 
         @Override
@@ -173,8 +176,14 @@ public class XSharedPreferencesEx
         @Override
         public boolean commit()
         {
-            setKeyValue(this.mContext, XSharedPreferencesEx.this.mFileName, this.mKey, this.mValue, this.mType);
+            setKeyValue(this.mContext, this.mFileName, this.mKey, this.mValue, this.mType);
             return true;
+        }
+
+        public void init(final Context context, final String fileName)
+        {
+            this.mContext = context;
+            this.mFileName = fileName;
         }
 
         @Override
@@ -240,11 +249,6 @@ public class XSharedPreferencesEx
         public SharedPreferences.Editor remove(final String key)
         {
             throw new UnsupportedOperationException();
-        }
-
-        public void setContext(final Context context)
-        {
-            this.mContext = context;
         }
     }
 }

@@ -70,8 +70,6 @@ public class XposedHookLoadPackage implements IXposedHookLoadPackage
             @Override
             protected void beforeHookedMethod(final MethodHookParam param) throws Throwable
             {
-                XposedBridge.log("onCreate Hooked Success!");
-
                 final Context context = (Context) param.thisObject;
 
                 packagePreferences.init(context, SharedPreferencesProvider.SHARED_PREFERENCES_FILE_NAME_MAIN);
@@ -83,13 +81,17 @@ public class XposedHookLoadPackage implements IXposedHookLoadPackage
                 if (selectedLocationIndex == -1)
                 {
                     final int newCount = packagePreferences.getInt("count", 0) + 1;
-                    mPreferences.init(context, "" + newCount);//记录递增的Count，总共记录的位置数量
-                    packagePreferences.edit().putInt("count", newCount).apply();
+                    packagePreferences.edit().putInt("count", newCount).commit();
+
+                    //记录递增的Count，总共记录的位置数量
+                    mPreferences.init(context, "" + newCount);
+                    mPreferences.edit().putBoolean("ReadOnly", false).commit();
                 }
                 else
                 {
-                    mPreferences.init(context, "" + selectedLocationIndex);//已经选择默认模拟的位置时，开启只读模式，所有读取的值都从默认Location里取。
-                    mPreferences.edit().putBoolean("ReadOnly", true);//.commit() .apply();
+                    //已经选择默认模拟的位置时，开启只读模式，所有读取的值都从默认Location里取。
+                    mPreferences.init(context, "" + selectedLocationIndex);
+                    mPreferences.edit().putBoolean("ReadOnly", true).commit();
                 }
                 super.beforeHookedMethod(param);
             }
