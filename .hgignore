@@ -20,4 +20,3 @@ out/
 .idea/modules.xml
 .idea/runConfigurations.xml
 .idea/compiler.xml
-settings.gradle
